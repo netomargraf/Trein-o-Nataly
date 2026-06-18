@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workout Tracker</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Animação suave entre telas e elementos */
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .btn-press:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-10">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="dumbbell" class="w-6 h-6"></i>
+        <h1 class="font-bold text-lg">Workout Tracker</h1>
+      </div>
+      <button id="btn-reset" class="text-sm underline opacity-90 hover:opacity-100 hidden" aria-label="Reiniciar progresso">
+        Reiniciar
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 p-4 max-w-md mx-auto w-full">
+
+    <!-- TELA 1: SELEÇÃO DE TREINO -->
+    <section id="screen-select" class="fade-in">
+      <div class="text-center mb-8 mt-4">
+        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+          <i data-lucide="calendar-check" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Escolha seu treino</h2>
+        <p class="text-slate-500">Selecione o treino de hoje para começar.</p>
+      </div>
+
+      <div class="grid gap-4">
+        <button onclick="app.startWorkout('A')" class="btn-press bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition flex items-center justify-between">
+          <div class="text-left">
+            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wide">Treino</span>
+            <span class="block text-2xl font-bold">Treino A</span>
+          </div>
+          <i data-lucide="arrow-right" class="w-6 h-6 text-slate-400"></i>
+        </button>
+
+        <button onclick="app.startWorkout('B')" class="btn-press bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition flex items-center justify-between">
+          <div class="text-left">
+            <span class="block text-xs font-semibold text-emerald-600 uppercase tracking-wide">Treino</span>
+            <span class="block text-2xl font-bold">Treino B</span>
+          </div>
+          <i data-lucide="arrow-right" class="w-6 h-6 text-slate-400"></i>
+        </button>
+
+        <button onclick="app.startWorkout('C')" class="btn-press bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition flex items-center justify-between">
+          <div class="text-left">
+            <span class="block text-xs font-semibold text-rose-600 uppercase tracking-wide">Treino</span>
+            <span class="block text-2xl font-bold">Treino C</span>
+          </div>
+          <i data-lucide="arrow-right" class="w-6 h-6 text-slate-400"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 2: EXERCÍCIO ATUAL -->
+    <section id="screen-workout" class="hidden fade-in">
+      <!-- Barra de progresso -->
+      <div class="mb-4 mt-2">
+        <div class="flex justify-between text-sm mb-1">
+          <span id="progress-text" class="font-semibold text-slate-700">Exercício 1 de 5</span>
+          <span id="progress-percent" class="text-slate-500">0%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+          <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Card do exercício -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- Container da imagem (substituir src pelo caminho local) -->
+        <div class="relative bg-slate-100 h-48 flex items-center justify-center overflow-hidden">
+          <img id="exercise-image" src="" alt="Imagem do exercício" class="hidden w-full h-full object-cover" />
+          <div id="exercise-placeholder" class="flex flex-col items-center text-slate-400">
+            <i data-lucide="image" class="w-12 h-12 mb-2"></i>
+            <span class="text-sm">Imagem do exercício</span>
+          </div>
+        </div>
+
+        <div class="p-5">
+          <span id="exercise-number" class="text-xs font-bold text-indigo-600 uppercase tracking-wide">Exercício 1</span>
+          <h2 id="exercise-name" class="text-2xl font-bold mb-2">Nome do exercício</h2>
+          <p id="exercise-desc" class="text-slate-600 text-sm leading-relaxed mb-5">Descrição do exercício.</p>
+
+          <!-- Séries interativas -->
+          <div class="mb-5">
+            <div class="flex justify-between items-center mb-3">
+              <span class="font-semibold text-slate-700">Séries</span>
+              <span id="series-config" class="text-xs text-slate-500">3 séries × 12 repetições</span>
+            </div>
+            <div id="series-list" class="grid grid-cols-3 gap-3">
+              <!-- Botões de série gerados via JS -->
+            </div>
+          </div>
+
+          <!-- Botão avançar -->
+          <button id="btn-next" onclick="app.nextExercise()" class="btn-press w-full bg-slate-300 text-slate-500 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2" disabled>
+            <span>Avançar exercício</span>
+            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 3: CONCLUSÃO -->
+    <section id="screen-finish" class="hidden fade-in h-full flex flex-col items-center justify-center text-center py-10">
+      <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5 text-emerald-600">
+        <i data-lucide="trophy" class="w-10 h-10"></i>
+      </div>
+      <h2 class="text-3xl font-bold mb-2">Treino concluído!</h2>
+      <p id="finish-message" class="text-slate-600 mb-8">Parabéns! Você completou todo o treino de hoje.</p>
+
+      <div class="grid gap-3 w-full">
+        <button onclick="app.goHome()" class="btn-press w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700 transition">
+          Voltar ao início
+        </button>
+        <button onclick="app.goHome()" class="btn-press w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-50 transition">
+          Escolher outro treino
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ============================================================
+    // WORKOUT TRACKER - DADOS DOS TREINOS
+    // ============================================================
+    // INSTRUÇÕES DE PERSONALIZAÇÃO:
+    // 1. Substitua os nomes fictícios pelos nomes reais dos exercícios.
+    // 2. Substitua as descrições pelas explicações/instruções reais.
+    // 3. Troque o campo "image" por caminhos locais, ex: "imagens/agachamento.jpg".
+    //    Se não houver imagem, mantenha "" para mostrar o placeholder amigável.
+    // ============================================================
+    const workouts = {
+      A: [
+        { name: "Agachamento Livre", description: "Mantenha os pés na largura dos ombros, desça o quadril para trás como se fosse sentar em uma cadeira, mantendo o peito erguido e os joelhos alinhados com os pés.", image: "" },
+        { name: "Leg Press 45°", description: "Posicione os pés no meio da plataforma, desça controladamente até formar um ângulo de 90° nos joelhos e empurre de volta sem travar as pernas.", image: "" },
+        { name: "Cadeira Extensora", description: "Ajuste o aparelto para que o eixo de rotação fique alinhado ao joelho. Estenda as pernas até quase travar e volte de forma controlada.", image: "" },
+        { name: "Mesa Flexora", description: "Deite-se de bruços com os calcanhares apoiados no rolo. Flexione os joelhos trazendo o calcanhar em direção ao glúteo e volte lentamente.", image: "" },
+        { name: "Panturrilha em Pé", description: "Fique em pé na máquina com os calcanhares para fora da plataforma. Eleve os calcanhares ao máximo, contraindo a panturrilha, e desça com controle.", image: "" }
+      ],
+      B: [
+        { name: "Supino Reto com Halteres", description: "Deite-se no banco com os pés firmes no chão. Desça os halteres lateralmente até a altura do peito e empurre verticalmente.", image: "" },
+        { name: "Crucifixo na Polia Baixa", description: "Segure as alças com os braços estendidos para cima. Abaixe os braços em arco até a altura do peito, contraindo o peitoral.", image: "" },
+        { name: "Desenvolvimento de Ombros", description: "Com os halteres na altura dos ombros, empurre para cima até quase travar os cotovelos e desça com controle.", image: "" },
+        { name: "Elevação Lateral", description: "Com os halteres ao lado do corpo, eleve os braços lateralmente até a altura dos ombros e desça lentamente.", image: "" },
+        { name: "Tríceps na Polia Alta", description: "Segure a barra com as mãos próximas, cotovelos junto ao corpo. Estenda os cotovelos para baixo e retorne controlado.", image: "" }
+      ],
+      C: [
+        { name: "Puxada Aberta na Frente", description: "Segure a barra com as mãos abertas. Puxe a barra até a parte superior do peito, contraindo as costas, e retorne com controle.", image: "" },
+        { name: "Remada Curvada com Halteres", description: "Flexione levemente os joelhos e incline o tronco. Puxe os halteres em direção à cintura, mantendo os cotovelos próximos ao corpo.", image: "" },
+        { name: "Rosca Direta com Barra", description: "Segure a barra com as palmas para cima. Flexione os cotovelos levando a barra até os ombros e desça lentamente.", image: "" },
+        { name: "Rosca Martelo", description: "Segure os halteres com as palmas uma em frente à outra. Flexione os cotovelos de forma alternada ou simultânea.", image: "" },
+        { name: "Prancha Abdominal", description: "Apoie-se nos antebraços e na ponta dos pés, mantendo o corpo alinhado e apertando o abdômen pelo tempo determinado.", image: "" }
+      ]
+    };
+
+    // Configuração de séries e repetições (altere aqui se desejar outro padrão)
+    const SERIES_COUNT = 3;
+    const REPS_COUNT = 12;
+
+    // Chave usada para salvar o progresso no LocalStorage
+    const STORAGE_KEY = "workoutTrackerState";
+
+    const app = {
+      // Estado da aplicação
+      state: {
+        workoutId: null,   // 'A', 'B' ou 'C'
+        currentIndex: 0,   // índice do exercício atual (0 a 4)
+        completed: {}      // mapa: exerciseIndex -> Set de séries concluídas
+      },
+
+      // Referências aos elementos do DOM
+      dom: {},
+
+      init() {
+        // Inicializa os ícones Lucide
+        lucide.createIcons();
+
+        // Cache de elementos
+        this.dom = {
+          screenSelect: document.getElementById("screen-select"),
+          screenWorkout: document.getElementById("screen-workout"),
+          screenFinish: document.getElementById("screen-finish"),
+          progressText: document.getElementById("progress-text"),
+          progressPercent: document.getElementById("progress-percent"),
+          progressBar: document.getElementById("progress-bar"),
+          exerciseImage: document.getElementById("exercise-image"),
+          exercisePlaceholder: document.getElementById("exercise-placeholder"),
+          exerciseNumber: document.getElementById("exercise-number"),
+          exerciseName: document.getElementById("exercise-name"),
+          exerciseDesc: document.getElementById("exercise-desc"),
+          seriesList: document.getElementById("series-list"),
+          seriesConfig: document.getElementById("series-config"),
+          btnNext: document.getElementById("btn-next"),
+          btnReset: document.getElementById("btn-reset"),
+          finishMessage: document.getElementById("finish-message")
+        };
+
+        // Botão de reiniciar progresso salvo
+        this.dom.btnReset.addEventListener("click", () => this.resetSaved());
+
+        // Tenta restaurar progresso salvo
+        this.loadState();
+      },
+
+      // Inicia um treino selecionado (A, B ou C)
+      startWorkout(id) {
+        this.state.workoutId = id;
+        this.state.currentIndex = 0;
+        this.state.completed = {};
+        this.saveState();
+        this.showScreen("workout");
+        this.renderExercise();
+      },
+
+      // Renderiza o exercício atual na tela
+      renderExercise() {
+        const exercises = workouts[this.state.workoutId];
+        const ex = exercises[this.state.currentIndex];
+        const total = exercises.length;
+        const index = this.state.currentIndex;
+
+        // Atualiza progresso
+        const percent = Math.round(((index) / total) * 100);
+        this.dom.progressText.textContent = `Exercício ${index + 1} de ${total}`;
+        this.dom.progressPercent.textContent = `${percent}%`;
+        this.dom.progressBar.style.width = `${percent}%`;
+
+        // Número e nome
+        this.dom.exerciseNumber.textContent = `Exercício ${index + 1}`;
+        this.dom.exerciseName.textContent = ex.name;
+        this.dom.exerciseDesc.textContent = ex.description;
+
+        // Imagem: se houver caminho, exibe; senão, mostra placeholder amigável
+        if (ex.image && ex.image.trim() !== "") {
+          this.dom.exerciseImage.src = ex.image;
+          this.dom.exerciseImage.classList.remove("hidden");
+          this.dom.exercisePlaceholder.classList.add("hidden");
+        } else {
+          this.dom.exerciseImage.src = "";
+          this.dom.exerciseImage.classList.add("hidden");
+          this.dom.exercisePlaceholder.classList.remove("hidden");
+        }
+
+        // Configuração de séries
+        this.dom.seriesConfig.textContent = `${SERIES_COUNT} séries × ${REPS_COUNT} repetições`;
+
+        // Renderiza botões de séries
+        this.dom.seriesList.innerHTML = "";
+        const completedSet = this.getCompletedSet(index);
+        for (let i = 1; i <= SERIES_COUNT; i++) {
+          const isDone = completedSet.has(i);
+          const btn = document.createElement("button");
+          btn.className = `btn-press py-3 rounded-xl font-semibold border transition flex flex-col items-center justify-center ${
+            isDone
+              ? "bg-emerald-500 border-emerald-500 text-white"
+              : "bg-white border-slate-200 text-slate-700 hover:border-indigo-400"
+          }`;
+          btn.innerHTML = isDone
+            ? `<i data-lucide="check" class="w-5 h-5 mb-1"></i><span>Série ${i}</span>`
+            : `<span class="text-lg font-bold">${i}</span><span class="text-xs">${REPS_COUNT} reps</span>`;
+          btn.onclick = () => this.toggleSeries(i);
+          this.dom.seriesList.appendChild(btn);
+        }
+
+        // Atualiza botão avançar
+        this.updateNextButton();
+
+        // Re-cria ícones Lucide nos novos elementos
+        lucide.createIcons();
+      },
+
+      // Retorna o Set de séries concluídas do exercício atual
+      getCompletedSet(index) {
+        if (!this.state.completed[index]) {
+          this.state.completed[index] = new Set();
+        }
+        return this.state.completed[index];
+      },
+
+      // Marca/desmarca uma série como concluída
+      toggleSeries(seriesNumber) {
+        const set = this.getCompletedSet(this.state.currentIndex);
+        if (set.has(seriesNumber)) {
+          set.delete(seriesNumber);
+        } else {
+          set.add(seriesNumber);
+        }
+        this.saveState();
+        this.renderExercise();
+
+        // Se todas as séries foram concluídas, avança automaticamente após pequena pausa
+        if (set.size === SERIES_COUNT) {
+          setTimeout(() => this.nextExercise(), 600);
+        }
+      },
+
+      // Habilita/destaca o botão de avançar quando todas as séries estão concluídas
+      updateNextButton() {
+        const set = this.getCompletedSet(this.state.currentIndex);
+        const allDone = set.size === SERIES_COUNT;
+        const btn = this.dom.btnNext;
+        if (allDone) {
+          btn.disabled = false;
+          btn.className = "btn-press w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700 transition flex items-center justify-center gap-2";
+        } else {
+          btn.disabled = true;
+          btn.className = "btn-press w-full bg-slate-300 text-slate-500 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2";
+        }
+      },
+
+      // Avança para o próximo exercício ou finaliza o treino
+      nextExercise() {
+        const exercises = workouts[this.state.workoutId];
+        if (this.state.currentIndex < exercises.length - 1) {
+          this.state.currentIndex += 1;
+          this.saveState();
+          this.renderExercise();
+        } else {
+          this.finishWorkout();
+        }
+      },
+
+      // Finaliza o treino e mostra tela de conclusão
+      finishWorkout() {
+        this.dom.progressBar.style.width = "100%";
+        this.dom.finishMessage.textContent = `Você completou todo o Treino ${this.state.workoutId}. Continue assim! 💪`;
+        this.clearState();
+        this.showScreen("finish");
+      },
+
+      // Volta para a tela inicial
+      goHome() {
+        this.clearState();
+        this.showScreen("select");
+      },
+
+      // Alterna entre as telas (select, workout, finish)
+      showScreen(name) {
+        this.dom.screenSelect.classList.add("hidden");
+        this.dom.screenWorkout.classList.add("hidden");
+        this.dom.screenFinish.classList.add("hidden");
+
+        if (name === "select") this.dom.screenSelect.classList.remove("hidden");
+        if (name === "workout") this.dom.screenWorkout.classList.remove("hidden");
+        if (name === "finish") this.dom.screenFinish.classList.remove("hidden");
+
+        // Mostra/esconde botão de reiniciar progresso
+        this.dom.btnReset.classList.toggle("hidden", name !== "workout");
+
+        // Re-cria ícones ao trocar de tela
+        lucide.createIcons();
+      },
+
+      // Salva o estado atual no LocalStorage (bônus de persistência)
+      saveState() {
+        // Converte Set para Array para poder serializar em JSON
+        const serializable = {};
+        for (const key in this.state.completed) {
+          serializable[key] = Array.from(this.state.completed[key]);
+        }
+        const data = {
+          workoutId: this.state.workoutId,
+          currentIndex: this.state.currentIndex,
+          completed: serializable
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      },
+
+      // Carrega o estado salvo do LocalStorage, se existir
+      loadState() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+
+        try {
+          const data = JSON.parse(saved);
+          if (!data.workoutId || !workouts[data.workoutId]) return;
+
+          this.state.workoutId = data.workoutId;
+          this.state.currentIndex = data.currentIndex || 0;
+          this.state.completed = {};
+
+          // Converte arrays de volta para Set
+          for (const key in data.completed) {
+            this.state.completed[key] = new Set(data.completed[key]);
+          }
+
+          // Se o treino ainda não terminou, volta direto para ele
+          const exercises = workouts[this.state.workoutId];
+          if (this.state.currentIndex < exercises.length) {
+            this.showScreen("workout");
+            this.renderExercise();
+          }
+        } catch (e) {
+          console.error("Erro ao restaurar progresso:", e);
+          this.clearState();
+        }
+      },
+
+      // Limpa o estado salvo no LocalStorage
+      clearState() {
+        localStorage.removeItem(STORAGE_KEY);
+      },
+
+      // Reinicia o treino atual e limpa o progresso salvo
+      resetSaved() {
+        if (confirm("Tem certeza que deseja reiniciar o treino atual?")) {
+          this.clearState();
+          this.startWorkout(this.state.workoutId);
+        }
+      }
+    };
+
+    // Inicializa o aplicativo quando o DOM estiver pronto
+    document.addEventListener("DOMContentLoaded", () => app.init());
+  </script>
+</body>
+</html>
