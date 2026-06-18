@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Workout Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    body { font-family: 'Inter', sans-serif; }
+
+    /* Custom animations */
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+    @keyframes slide-up {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+
+    @keyframes progress {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+
+    .rest-progress-bar {
+      animation: progress 60s linear forwards;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .checkbox-custom:checked + div {
+      background-color: #10b981;
+      border-color: #10b981;
+      color: white;
+    }
+
+    .checkbox-custom:checked + div .check-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .exercise-image {
+      aspect-ratio: 16/10;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <!-- APP ROOT -->
+  <div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden">
+    
+    <!-- ================= SCREEN: HOME ================= -->
+    <section id="screen-home" class="screen min-h-screen flex flex-col">
+      <!-- Header -->
+      <div class="bg-gradient-to-br from-violet-600 to-indigo-700 text-white px-6 pt-10 pb-8 rounded-b-[2.5rem] shadow-lg">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
+            <i data-lucide="dumbbell" class="w-6 h-6"></i>
+          </div>
+          <h1 class="text-2xl font-bold tracking-tight">Workout Tracker</h1>
+        </div>
+        <p class="text-violet-100 text-sm font-medium">Escolha seu treino e vamos começar!</p>
+      </div>
+
+      <div class="flex-1 px-5 py-6 space-y-5 overflow-y-auto pb-24">
+        
+        <!-- Weekly Frequency Card -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="calendar-check" class="w-5 h-5 text-violet-600"></i>
+              <h2 class="font-bold text-slate-800">Frequência Semanal</h2>
+            </div>
+            <span id="weekly-count" class="text-xs font-semibold bg-violet-100 text-violet-700 px-2.5 py-1 rounded-full">0/7</span>
+          </div>
+          <div class="grid grid-cols-7 gap-2" id="week-days">
+            <!-- Days injected by JS -->
+          </div>
+          <p class="text-xs text-slate-500 mt-3 text-center">Toque nos dias que você treinou esta semana</p>
+        </div>
+
+        <!-- Workout Selection Cards -->
+        <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i data-lucide="list" class="w-5 h-5 text-violet-600"></i>
+          Selecionar Treino
+        </h2>
+
+        <button onclick="startWorkout('A')" class="group w-full text-left">
+          <div class="bg-gradient-to-br from-rose-500 to-orange-500 rounded-2xl p-5 text-white shadow-lg shadow-rose-200 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold backdrop-blur-sm mb-2">TREINO A</span>
+                <h3 class="text-xl font-bold">Membros Inferiores</h3>
+                <p class="text-white/90 text-sm font-medium">Pernas e Glúteos</p>
+              </div>
+              <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm group-hover:rotate-12 transition-transform">
+                <i data-lucide="lego" class="w-7 h-7"></i>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-white/80">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+              <span>6 exercícios</span>
+              <span class="mx-1">•</span>
+              <span>~50 min</span>
+            </div>
+          </div>
+        </button>
+
+        <button onclick="startWorkout('B')" class="group w-full text-left">
+          <div class="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-cyan-200 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold backdrop-blur-sm mb-2">TREINO B</span>
+                <h3 class="text-xl font-bold">Superiores e Abdômen</h3>
+                <p class="text-white/90 text-sm font-medium">Costas, Peito, Ombros e Braços</p>
+              </div>
+              <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm group-hover:rotate-12 transition-transform">
+                <i data-lucide="armchair" class="w-7 h-7"></i>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-white/80">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+              <span>8 exercícios</span>
+              <span class="mx-1">•</span>
+              <span>~60 min</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Quick Tips -->
+        <div class="bg-slate-100 rounded-2xl p-4 flex items-start gap-3">
+          <div class="p-2 bg-white rounded-xl shrink-0">
+            <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500"></i>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-800 text-sm">Dica do dia</h4>
+            <p class="text-slate-600 text-xs leading-relaxed mt-1">Mantenha a hidratação durante o treino e respire de forma controlada em cada repetição.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: WORKOUT ================= -->
+    <section id="screen-workout" class="screen hidden min-h-screen flex flex-col bg-slate-50">
+      <!-- Top Bar -->
+      <div class="bg-white px-4 py-4 shadow-sm sticky top-0 z-20">
+        <div class="flex items-center justify-between mb-3">
+          <button onclick="goBackToHome()" class="p-2 -ml-2 hover:bg-slate-100 rounded-xl transition-colors">
+            <i data-lucide="chevron-left" class="w-6 h-6 text-slate-700"></i>
+          </button>
+          <div class="text-center">
+            <span id="workout-title-badge" class="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-bold">TREINO A</span>
+          </div>
+          <div class="w-10"></div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Tempo total</p>
+            <p id="total-timer" class="text-2xl font-bold text-slate-800 font-mono">00:00</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-slate-500 font-medium">Exercício</p>
+            <p id="exercise-counter" class="text-lg font-bold text-violet-600">1 / 6</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercise Content -->
+      <div class="flex-1 overflow-y-auto px-4 py-5 pb-32">
+        <div id="exercise-card" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in">
+          <!-- Exercise Image -->
+          <div class="relative">
+            <img id="exercise-image" src="" alt="Exercício" class="w-full exercise-image">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-5">
+              <h2 id="exercise-name" class="text-white text-xl font-bold leading-tight">Nome do Exercício</h2>
+            </div>
+          </div>
+
+          <div class="p-5 space-y-5">
+            <!-- Description -->
+            <div class="flex gap-3">
+              <div class="p-2 bg-violet-100 rounded-xl h-fit shrink-0">
+                <i data-lucide="info" class="w-5 h-5 text-violet-600"></i>
+              </div>
+              <p id="exercise-description" class="text-slate-600 text-sm leading-relaxed">Descrição do exercício.</p>
+            </div>
+
+            <!-- Sets Info -->
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+              <i data-lucide="repeat" class="w-5 h-5 text-slate-500"></i>
+              <p id="exercise-sets" class="text-slate-700 font-semibold text-sm">4 séries de 10-12 repetições</p>
+            </div>
+
+            <!-- Sets Checklist -->
+            <div>
+              <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-violet-600"></i>
+                Marcar séries
+              </h3>
+              <div id="sets-container" class="grid grid-cols-2 gap-3">
+                <!-- Set buttons injected by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Action Bar -->
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 max-w-md mx-auto z-30">
+        <button id="next-exercise-btn" onclick="nextExercise()" disabled 
+          class="w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-slate-400">
+          <span>Avançar exercício</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: FINISH ================= -->
+    <section id="screen-finish" class="screen hidden min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-br from-violet-600 to-indigo-700 text-white">
+      <div class="text-center animate-slide-up">
+        <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-pulse-soft">
+          <i data-lucide="trophy" class="w-12 h-12 text-white"></i>
+        </div>
+        <h1 class="text-3xl font-bold mb-2">Treino finalizado!</h1>
+        <p class="text-violet-100 text-lg mb-8">Você foi incrível hoje.</p>
+        
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8">
+          <p class="text-violet-100 text-sm uppercase tracking-wider font-semibold mb-1">Tempo total</p>
+          <p id="finish-time" class="text-4xl font-bold font-mono">00:00</p>
+        </div>
+
+        <button onclick="finishWorkout()" class="w-full py-4 bg-white text-violet-700 rounded-2xl font-bold text-lg shadow-lg hover:bg-violet-50 transition-colors">
+          Voltar ao início
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= REST TIMER MODAL ================= -->
+    <div id="rest-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-0" id="rest-modal-backdrop"></div>
+      <div id="rest-modal-content" class="bg-white w-full max-w-md mx-auto rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl transform translate-y-full sm:translate-y-10 transition-all duration-400 pointer-events-auto">
+        <!-- Progress Bar -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-100 rounded-t-3xl overflow-hidden">
+          <div id="rest-progress" class="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rest-progress-bar"></div>
+        </div>
+        
+        <div class="text-center mb-6">
+          <span class="inline-block px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-bold mb-3">DESCANSO</span>
+          <h2 id="rest-timer" class="text-5xl font-bold text-slate-800 font-mono tracking-tight">60</h2>
+          <p class="text-slate-500 text-sm mt-1">segundos restantes</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="addRestTime(10)" class="py-3 px-4 bg-slate-100 text-slate-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            +10s
+          </button>
+          <button onclick="skipRest()" class="py-3 px-4 bg-violet-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-violet-700 transition-colors">
+            <i data-lucide="skip-forward" class="w-4 h-4"></i>
+            Pular
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ================= DATA =================
+    const workouts = {
+      A: {
+        name: 'Membros Inferiores',
+        label: 'TREINO A',
+        color: 'rose',
+        exercises: [
+          {
+            name: 'Agachamento Livre ou Guiado (na Máquina Smith)',
+            description: 'Pés na largura dos ombros, descendo até o joelho fazer um ângulo de 90 graus.',
+            sets: '4 séries de 10 a 12 repetições',
+            setsCount: 4,
+            image: 'imagens/agachamento livre.PNG'
+          },
+          {
+            name: 'Afundo ou Passada (com os Halteres coloridos)',
+            description: 'Segurando um halter em cada mão, dar um passo à frente e afundar.',
+            sets: '3 séries de 10 a 12 repetições (para cada perna)',
+            setsCount: 3,
+            image: 'imagens/Afundo ou Passada.PNG'
+          },
+          {
+            name: 'Elevação Pélvica (na Máquina Smith ou com Barra Livre e colchonete)',
+            description: 'Apoiar as costas no banco, barra no quadril (use aquele step ou colchonete para proteger o osso) e elevar o quadril contraindo o glúteo.',
+            sets: '4 séries de 10 a 12 repetições (segurando 2 segundos em cima)',
+            setsCount: 4,
+            image: 'imagens/elevacao pelvica.PNG'
+          },
+          {
+            name: 'Cadeira Extensora (Na máquina de pernas)',
+            description: 'Foco total na parte da frente da coxa (quadríceps).',
+            sets: '3 séries de 12 a 15 repetições',
+            setsCount: 3,
+            image: 'imagens/cadeira extensora.PNG'
+          },
+          {
+            name: 'Stiff (com Halteres ou Barra Reta)',
+            description: 'Pernas semi-estendidas, descendo o peso rente à perna jogando o quadril para trás (foco no posterior de coxa e glúteo).',
+            sets: '4 séries de 10 a 12 repetições',
+            setsCount: 4,
+            image: 'imagens/stiff.PNG'
+          },
+          {
+            name: 'Panturrilha em pé (na Máquina Smith ou segurando Halteres)',
+            description: 'Usar um dos steps azuis para apoiar a ponta do pé e descer o calcanhar.',
+            sets: '4 séries de 15 a 20 repetições',
+            setsCount: 4,
+            image: 'imagens/panturrilha em pe.PNG'
+          }
+        ]
+      },
+      B: {
+        name: 'Membros Superiores e Abdômen',
+        label: 'TREINO B',
+        color: 'cyan',
+        exercises: [
+          {
+            name: 'Puxada Alta (no Crossover)',
+            description: 'Usar a polia alta do Crossover, puxando a barra ou puxador em direção ao peito.',
+            sets: '3 séries de 10 a 12 repetições',
+            setsCount: 3,
+            image: 'imagens/puxada alta.PNG'
+          },
+          {
+            name: 'Remada Curvada (com Halteres ou Barra)',
+            description: 'Tronco inclinado à frente, puxando o peso em direção ao umbigo.',
+            sets: '3 séries de 10 a 12 repetições',
+            setsCount: 3,
+            image: 'imagens/Remada Curvada.PNG'
+          },
+          {
+            name: 'Supino Reto ou Inclinado (com Halteres no Banco Ajustável)',
+            description: 'Deitada no banco, empurrar os halteres para cima.',
+            sets: '3 séries de 10 a 12 repetições',
+            setsCount: 3,
+            image: 'imagens/supino reto.PNG'
+          },
+          {
+            name: 'Desenvolvimento para Ombros (com Halteres)',
+            description: 'Sentada no banco com as costas apoiadas, empurrar os halteres acima da cabeça.',
+            sets: '3 séries de 10 a 12 repetições',
+            setsCount: 3,
+            image: 'imagens/desenvolvimento.PNG'
+          },
+          {
+            name: 'Tríceps na Polia (com a Corda no Crossover)',
+            description: 'Cotovelos junto ao corpo, estenda a corda para baixo contraindo o tríceps.',
+            sets: '3 séries de 12 a 15 repetições',
+            setsCount: 3,
+            image: 'imagens/triceps na polia.PNG'
+          },
+          {
+            name: 'Bíceps Rosca Direta (com Halteres ou a Barra W)',
+            description: 'Flexione os cotovelos trazendo o peso em direção aos ombros, mantendo o corpo estável.',
+            sets: '3 séries de 12 a 15 repetições',
+            setsCount: 3,
+            image: 'imagens/Bíceps Rosca Direta.PNG'
+          },
+          {
+            name: 'Prancha Abdominal (no Colchonete)',
+            description: 'Apoie os antebraços e pontas dos pés no colchonete, mantendo o corpo alinhado e o abdômen contraído.',
+            sets: '3 séries de 30 a 45 segundos',
+            setsCount: 3,
+            image: 'imagens/prancha.PNG'
+          },
+          {
+            name: 'Abdominal Supra (Livre no colchonete ou usando a Roda Abdominal)',
+            description: 'Deitada de costas, flexione o tronco contraindo a parte superior do abdômen.',
+            sets: '3 séries de 15 a 20 repetições',
+            setsCount: 3,
+            image: 'imagens/abdominal supra.PNG'
+          }
+        ]
+      }
+    };
+
+    const weekDays = [
+      { id: 'seg', label: 'Seg' },
+      { id: 'ter', label: 'Ter' },
+      { id: 'qua', label: 'Qua' },
+      { id: 'qui', label: 'Qui' },
+      { id: 'sex', label: 'Sex' },
+      { id: 'sab', label: 'Sáb' },
+      { id: 'dom', label: 'Dom' }
+    ];
+
+    // ================= STATE =================
+    let currentWorkout = null;
+    let currentExerciseIndex = 0;
+    let completedSets = [];
+    let totalTimerInterval = null;
+    let totalSeconds = 0;
+    let restTimerInterval = null;
+    let restSeconds = 0;
+    let isResting = false;
+    let weeklyChecklist = {};
+
+    // ================= INITIALIZATION =================
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadWeeklyChecklist();
+      renderWeekDays();
+      updateWeeklyCount();
+      
+      // Handle browser back button
+      window.addEventListener('popstate', handlePopState);
+    });
+
+    // ================= WEEKLY CHECKLIST =================
+    function loadWeeklyChecklist() {
+      const saved = localStorage.getItem('workout-weekly-checklist');
+      if (saved) {
+        weeklyChecklist = JSON.parse(saved);
+      } else {
+        weeklyChecklist = {};
+      }
+    }
+
+    function saveWeeklyChecklist() {
+      localStorage.setItem('workout-weekly-checklist', JSON.stringify(weeklyChecklist));
+    }
+
+    function renderWeekDays() {
+      const container = document.getElementById('week-days');
+      container.innerHTML = weekDays.map(day => `
+        <label class="cursor-pointer relative">
+          <input type="checkbox" class="checkbox-custom hidden" 
+            ${weeklyChecklist[day.id] ? 'checked' : ''} 
+            onchange="toggleDay('${day.id}')">
+          <div class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-all duration-200 hover:border-violet-300 h-full">
+            <span class="text-xs font-semibold">${day.label}</span>
+            <i data-lucide="check" class="check-icon w-4 h-4 mt-1 opacity-0 transform scale-50 transition-all duration-200"></i>
+          </div>
+        </label>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function toggleDay(dayId) {
+      weeklyChecklist[dayId] = !weeklyChecklist[dayId];
+      saveWeeklyChecklist();
+      updateWeeklyCount();
+    }
+
+    function updateWeeklyCount() {
+      const count = Object.values(weeklyChecklist).filter(Boolean).length;
+      document.getElementById('weekly-count').textContent = `${count}/7`;
+    }
+
+    // ================= NAVIGATION =================
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function handlePopState(event) {
+      const screenWorkout = document.getElementById('screen-workout');
+      const screenFinish = document.getElementById('screen-finish');
+      
+      if (!screenWorkout.classList.contains('hidden') || !screenFinish.classList.contains('hidden')) {
+        goBackToHome();
+      }
+    }
+
+    function goBackToHome() {
+      // Clear timers and state
+      clearInterval(totalTimerInterval);
+      clearInterval(restTimerInterval);
+      hideRestModal();
+      
+      currentWorkout = null;
+      currentExerciseIndex = 0;
+      completedSets = [];
+      totalSeconds = 0;
+      restSeconds = 0;
+      isResting = false;
+      
+      showScreen('screen-home');
+      
+      // Reset history state
+      history.pushState({ screen: 'home' }, '', window.location.pathname);
+    }
+
+    // ================= WORKOUT LOGIC =================
+    function startWorkout(workoutId) {
+      currentWorkout = workoutId;
+      currentExerciseIndex = 0;
+      completedSets = new Array(workouts[workoutId].exercises.length).fill(0);
+      totalSeconds = 0;
+      
+      // Update badge color
+      const badge = document.getElementById('workout-title-badge');
+      badge.textContent = workouts[workoutId].label;
+      badge.className = `px-3 py-1 rounded-full text-xs font-bold ${
+        workoutId === 'A' 
+          ? 'bg-rose-100 text-rose-700' 
+          : 'bg-cyan-100 text-cyan-700'
+      }`;
+      
+      // Start total timer
+      startTotalTimer();
+      
+      renderExercise();
+      showScreen('screen-workout');
+      
+      // Push state for navigation
+      history.pushState({ screen: 'workout', workoutId }, '', window.location.pathname);
+    }
+
+    function renderExercise() {
+      const workout = workouts[currentWorkout];
+      const exercise = workout.exercises[currentExerciseIndex];
+      const totalExercises = workout.exercises.length;
+      
+      document.getElementById('exercise-name').textContent = exercise.name;
+      document.getElementById('exercise-description').textContent = exercise.description;
+      document.getElementById('exercise-sets').textContent = exercise.sets;
+      document.getElementById('exercise-image').src = exercise.image;
+      document.getElementById('exercise-image').alt = exercise.name;
+      document.getElementById('exercise-counter').textContent = `${currentExerciseIndex + 1} / ${totalExercises}`;
+      
+      renderSets(exercise.setsCount);
+      updateNextButton();
+    }
+
+    function renderSets(setsCount) {
+      const container = document.getElementById('sets-container');
+      const completed = completedSets[currentExerciseIndex];
+      
+      container.innerHTML = '';
+      for (let i = 1; i <= setsCount; i++) {
+        const isCompleted = i <= completed;
+        const button = document.createElement('button');
+        button.className = `p-4 rounded-xl border-2 font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+          isCompleted
+            ? 'bg-emerald-500 border-emerald-500 text-white'
+            : 'bg-white border-slate-200 text-slate-600 hover:border-violet-400 hover:bg-violet-50'
+        }`;
+        button.onclick = () => toggleSet(i);
+        button.innerHTML = `
+          <i data-lucide="${isCompleted ? 'check' : 'circle'}" class="w-5 h-5"></i>
+          <span>Série ${i}</span>
+        `;
+        container.appendChild(button);
+      }
+      lucide.createIcons();
+    }
+
+    function toggleSet(setIndex) {
+      const exercise = workouts[currentWorkout].exercises[currentExerciseIndex];
+      const currentCompleted = completedSets[currentExerciseIndex];
+      const totalExercises = workouts[currentWorkout].exercises.length;
+      
+      if (setIndex <= currentCompleted) {
+        // Uncheck this and all subsequent sets
+        completedSets[currentExerciseIndex] = setIndex - 1;
+      } else {
+        // Mark all sets up to this one as completed
+        completedSets[currentExerciseIndex] = setIndex;
+        
+        // Start rest timer if not the last set of the last exercise
+        const isLastSetOfExercise = setIndex === exercise.setsCount;
+        const isLastExercise = currentExerciseIndex === totalExercises - 1;
+        
+        if (!isLastExercise || !isLastSetOfExercise) {
+          startRestTimer();
+        }
+      }
+      
+      renderSets(exercise.setsCount);
+      updateNextButton();
+    }
+
+    function updateNextButton() {
+      const exercise = workouts[currentWorkout].exercises[currentExerciseIndex];
+      const allCompleted = completedSets[currentExerciseIndex] === exercise.setsCount;
+      const isLastExercise = currentExerciseIndex === workouts[currentWorkout].exercises.length - 1;
+      const btn = document.getElementById('next-exercise-btn');
+      
+      btn.disabled = !allCompleted;
+      
+      if (allCompleted) {
+        btn.className = 'w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg shadow-violet-200';
+        btn.innerHTML = `
+          <span>${isLastExercise ? 'Finalizar treino' : 'Avançar exercício'}</span>
+          <i data-lucide="${isLastExercise ? 'flag' : 'arrow-right'}" class="w-5 h-5"></i>
+        `;
+      } else {
+        btn.className = 'w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-slate-400';
+        btn.innerHTML = `
+          <span>Avançar exercício</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        `;
+      }
+      lucide.createIcons();
+    }
+
+    function nextExercise() {
+      const workout = workouts[currentWorkout];
+      
+      if (currentExerciseIndex < workout.exercises.length - 1) {
+        currentExerciseIndex++;
+        renderExercise();
+      } else {
+        finishWorkoutFlow();
+      }
+    }
+
+    function finishWorkoutFlow() {
+      clearInterval(totalTimerInterval);
+      hideRestModal();
+      
+      document.getElementById('finish-time').textContent = formatTime(totalSeconds);
+      showScreen('screen-finish');
+      history.pushState({ screen: 'finish' }, '', window.location.pathname);
+    }
+
+    function finishWorkout() {
+      goBackToHome();
+    }
+
+    // ================= TOTAL TIMER =================
+    function startTotalTimer() {
+      clearInterval(totalTimerInterval);
+      totalTimerInterval = setInterval(() => {
+        totalSeconds++;
+        document.getElementById('total-timer').textContent = formatTime(totalSeconds);
+      }, 1000);
+    }
+
+    function formatTime(seconds) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+      }
+      return `${pad(minutes)}:${pad(secs)}`;
+    }
+
+    function pad(num) {
+      return num.toString().padStart(2, '0');
+    }
+
+    // ================= REST TIMER =================
+    function startRestTimer() {
+      // Don't start if already resting
+      if (isResting) return;
+      
+      isResting = true;
+      restSeconds = 60;
+      
+      showRestModal();
+      
+      clearInterval(restTimerInterval);
+      restTimerInterval = setInterval(() => {
+        restSeconds--;
+        updateRestDisplay();
+        
+        if (restSeconds <= 0) {
+          completeRest();
+        }
+      }, 1000);
+    }
+
+    function showRestModal() {
+      const modal = document.getElementById('rest-modal');
+      const backdrop = document.getElementById('rest-modal-backdrop');
+      const content = document.getElementById('rest-modal-content');
+      const progress = document.getElementById('rest-progress');
+      
+      modal.classList.remove('hidden');
+      
+      // Reset animation
+      progress.classList.remove('rest-progress-bar');
+      void progress.offsetWidth; // Trigger reflow
+      progress.classList.add('rest-progress-bar');
+      
+      // Animate in
+      setTimeout(() => {
+        backdrop.classList.remove('opacity-0');
+        content.classList.remove('translate-y-full', 'sm:translate-y-10');
+      }, 10);
+      
+      updateRestDisplay();
+    }
+
+    function hideRestModal() {
+      const modal = document.getElementById('rest-modal');
+      const backdrop = document.getElementById('rest-modal-backdrop');
+      const content = document.getElementById('rest-modal-content');
+      
+      backdrop.classList.add('opacity-0');
+      content.classList.add('translate-y-full', 'sm:translate-y-10');
+      
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    function updateRestDisplay() {
+      document.getElementById('rest-timer').textContent = restSeconds;
+    }
+
+    function addRestTime(seconds) {
+      restSeconds += seconds;
+      
+      // Reset progress bar animation to reflect new total
+      const progress = document.getElementById('rest-progress');
+      progress.classList.remove('rest-progress-bar');
+      void progress.offsetWidth;
+      progress.classList.add('rest-progress-bar');
+      progress.style.animationDuration = `${restSeconds}s`;
+      
+      updateRestDisplay();
+    }
+
+    function skipRest() {
+      completeRest();
+    }
+
+    function completeRest() {
+      clearInterval(restTimerInterval);
+      isResting = false;
+      hideRestModal();
+      playBeep();
+    }
+
+    // ================= AUDIO BEEP (Web Audio API) =================
+    function playBeep() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+        oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (e) {
+        console.log('Audio not supported:', e);
+      }
+    }
+  </script>
+</body>
+</html>
