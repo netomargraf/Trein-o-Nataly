@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Treino da Mamãe da Doca 🐶</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .screen {
+      display: none !important;
+    }
+    .screen.active {
+      display: flex !important;
+    }
+    .exercise-img {
+      object-fit: contain;
+      width: 100%;
+      max-height: 280px;
+      background-color: #f8fafc;
+      border-radius: 0.75rem;
+    }
+    .checklist-day input:checked + span {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100">
+
+  <main class="max-w-md mx-auto w-full min-h-screen bg-slate-900">
+
+    <!-- Home Screen -->
+    <section id="homeScreen" class="screen active flex flex-col min-h-screen p-6">
+      <h1 class="text-3xl font-bold text-center mb-2 text-pink-400">Treino da Mamãe da Doca 🐶</h1>
+      <p class="text-center text-slate-400 mb-6">Escolha seu treino e vamos lá!</p>
+
+      <div class="bg-slate-800 rounded-xl p-4 mb-6">
+        <h2 class="text-lg font-semibold mb-3"><i class="fa-solid fa-calendar-week text-pink-400 mr-2"></i>Frequência Semanal</h2>
+        <div id="weeklyChecklist" class="grid grid-cols-2 gap-2 checklist-day">
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-day="seg" class="accent-pink-400 w-5 h-5"><span>Segunda</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-day="ter" class="accent-pink-400 w-5 h-5"><span>Terça</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-day="qua" class="accent-pink-400 w-5 h-5"><span>Quarta</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-day="qui" class="accent-pink-400 w-5 h-5"><span>Quinta</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-day="sex" class="accent-pink-400 w-5 h-5"><span>Sexta</span></label>
+          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-day="sab" class="accent-pink-400 w-5 h-5"><span>Sábado</span></label>
+          <label class="flex items-center gap-2 cursor-pointer col-span-2"><input type="checkbox" data-day="dom" class="accent-pink-400 w-5 h-5"><span>Domingo</span></label>
+        </div>
+      </div>
+
+      <div class="grid gap-4 mt-auto">
+        <button onclick="startWorkout('A')" class="w-full py-4 rounded-xl bg-pink-500 hover:bg-pink-600 font-bold text-lg shadow-lg transition">
+          <i class="fa-solid fa-dumbbell mr-2"></i>Treino A (Pernas)
+        </button>
+        <button onclick="startWorkout('B')" class="w-full py-4 rounded-xl bg-indigo-500 hover:bg-indigo-600 font-bold text-lg shadow-lg transition">
+          <i class="fa-solid fa-person-running mr-2"></i>Treino B (Superior)
+        </button>
+      </div>
+    </section>
+
+    <!-- Workout Screen -->
+    <section id="workoutScreen" class="screen flex flex-col min-h-screen p-6">
+      <div class="flex justify-between items-center mb-4">
+        <button onclick="showScreen('homeScreen')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+        <div class="text-center">
+          <span id="workoutLabel" class="text-sm font-bold text-pink-400 uppercase tracking-wide">TREINO A</span>
+          <div id="totalTimer" class="text-xl font-mono font-bold text-white">00:00</div>
+        </div>
+        <div class="w-6"></div>
+      </div>
+
+      <div class="flex-1 flex flex-col justify-center">
+        <div id="exerciseCard" class="bg-slate-800 rounded-2xl p-4 shadow-xl">
+          <div class="flex justify-between items-start mb-2">
+            <h2 id="exerciseName" class="text-2xl font-bold"></h2>
+            <span id="exerciseCounter" class="text-sm text-slate-400"></span>
+          </div>
+
+          <img id="exerciseImage" src="" alt="" class="exercise-img mb-4" />
+
+          <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+            <div class="bg-slate-700 rounded-lg p-2">
+              <div class="text-xs text-slate-400">Séries</div>
+              <div id="exerciseSets" class="text-xl font-bold text-pink-400"></div>
+            </div>
+            <div class="bg-slate-700 rounded-lg p-2">
+              <div class="text-xs text-slate-400">Reps</div>
+              <div id="exerciseReps" class="text-xl font-bold text-indigo-400"></div>
+            </div>
+            <div class="bg-slate-700 rounded-lg p-2">
+              <div class="text-xs text-slate-400">Concluídas</div>
+              <div id="completedSets" class="text-xl font-bold text-green-400">0</div>
+            </div>
+          </div>
+
+          <div id="setsButtons" class="flex flex-wrap gap-2 mb-4 justify-center"></div>
+
+          <button id="completeSetBtn" onclick="completeSet()" class="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 font-bold text-lg shadow transition mb-3">
+            <i class="fa-solid fa-check mr-2"></i>Concluir Série
+          </button>
+
+          <button id="nextExerciseBtn" onclick="nextExercise()" disabled class="w-full py-3 rounded-xl bg-slate-700 text-slate-500 font-bold text-lg cursor-not-allowed transition">
+            <i class="fa-solid fa-forward mr-2"></i>Avançar Exercício
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rest Screen -->
+    <section id="restScreen" class="screen flex flex-col min-h-screen p-6">
+      <div class="flex-1 flex flex-col items-center justify-center">
+        <div class="text-6xl mb-4 text-pink-400"><i class="fa-solid fa-stopwatch"></i></div>
+        <h2 class="text-2xl font-bold mb-2">Descanso</h2>
+        <div id="restTimer" class="text-6xl font-mono font-bold mb-6">01:00</div>
+
+        <div class="grid grid-cols-2 gap-4 w-full">
+          <button onclick="skipRest()" class="py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-bold transition">
+            <i class="fa-solid fa-forward-step mr-2"></i>Pular
+          </button>
+          <button onclick="addRestTime(10)" class="py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 font-bold transition">
+            <i class="fa-solid fa-plus mr-2"></i>+10s
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Finish Screen -->
+    <section id="finishScreen" class="screen flex flex-col min-h-screen p-6">
+      <div class="flex-1 flex flex-col items-center justify-center text-center">
+        <div class="text-7xl mb-4 text-green-400"><i class="fa-solid fa-trophy"></i></div>
+        <h2 class="text-3xl font-bold mb-2">Treino Concluído! 🐶</h2>
+        <p class="text-slate-400 mb-6">Você arrasou, mamãe da Doca!</p>
+        <div class="bg-slate-800 rounded-xl p-4 mb-6 w-full">
+          <div class="text-sm text-slate-400">Tempo Total</div>
+          <div id="finalTime" class="text-3xl font-mono font-bold text-pink-400"></div>
+        </div>
+        <button onclick="showScreen('homeScreen')" class="w-full py-4 rounded-xl bg-pink-500 hover:bg-pink-600 font-bold text-lg shadow-lg transition">
+          <i class="fa-solid fa-house mr-2"></i>Voltar ao Início
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    history.replaceState({ screen: 'home' }, '');
+
+    const workouts = {
+      A: [
+        { name: 'Agachamento Livre', sets: 3, reps: '12-15', img: 'imagens/Agachamento Livre.PNG' },
+        { name: 'Afundo', sets: 3, reps: '12-15', img: 'imagens/Afundo.PNG' },
+        { name: 'Elevação Pélvica', sets: 3, reps: '15-20', img: 'imagens/Elevação Pélvica.PNG' },
+        { name: 'Cadeira Extensora', sets: 3, reps: '12-15', img: 'imagens/Cadeira Extensora.PNG' },
+        { name: 'Stiff', sets: 3, reps: '12-15', img: 'imagens/Stiff.PNG' },
+        { name: 'Panturrilha', sets: 3, reps: '15-20', img: 'imagens/Panturrilha.PNG' }
+      ],
+      B: [
+        { name: 'Puxada Alta', sets: 3, reps: '12-15', img: 'imagens/Puxada Alta.PNG' },
+        { name: 'Remada Curvada', sets: 3, reps: '12-15', img: 'imagens/Remada Curvada.PNG' },
+        { name: 'Supino Reto', sets: 3, reps: '12-15', img: 'imagens/Supino Reto.PNG' },
+        { name: 'Desenvolvimento', sets: 3, reps: '12-15', img: 'imagens/Desenvolvimento.PNG' },
+        { name: 'Tríceps na Polia', sets: 3, reps: '12-15', img: 'imagens/Tríceps na Polia.PNG' },
+        { name: 'Bíceps Rosca Direta', sets: 3, reps: '12-15', img: 'imagens/Bíceps Rosca Direta.PNG' },
+        { name: 'Prancha', sets: 3, reps: '30-60s', img: 'imagens/Prancha.PNG' },
+        { name: 'Abdominal Supra', sets: 3, reps: '15-20', img: 'imagens/Abdominal Supra.PNG' }
+      ]
+    };
+
+    let currentWorkout = [];
+    let currentExerciseIndex = 0;
+    let completedSetsCount = 0;
+    let totalSeconds = 0;
+    let totalTimerInterval = null;
+    let restInterval = null;
+    let restSeconds = 60;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startWorkout(type) {
+      currentWorkout = workouts[type].map(ex => ({ ...ex, completed: 0 }));
+      currentExerciseIndex = 0;
+      completedSetsCount = 0;
+      totalSeconds = 0;
+
+      document.getElementById('workoutLabel').textContent = 'TREINO ' + type;
+      updateTotalTimer();
+      if (totalTimerInterval) clearInterval(totalTimerInterval);
+      totalTimerInterval = setInterval(() => {
+        totalSeconds++;
+        updateTotalTimer();
+      }, 1000);
+
+      renderExercise();
+      showScreen('workoutScreen');
+    }
+
+    function updateTotalTimer() {
+      const m = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const s = String(totalSeconds % 60).padStart(2, '0');
+      document.getElementById('totalTimer').textContent = `${m}:${s}`;
+    }
+
+    function renderExercise() {
+      const ex = currentWorkout[currentExerciseIndex];
+      document.getElementById('exerciseName').textContent = ex.name;
+      document.getElementById('exerciseImage').src = ex.img;
+      document.getElementById('exerciseImage').alt = ex.name;
+      document.getElementById('exerciseSets').textContent = ex.sets;
+      document.getElementById('exerciseReps').textContent = ex.reps;
+      document.getElementById('completedSets').textContent = ex.completed;
+      document.getElementById('exerciseCounter').textContent = `${currentExerciseIndex + 1} / ${currentWorkout.length}`;
+
+      const setsContainer = document.getElementById('setsButtons');
+      setsContainer.innerHTML = '';
+      for (let i = 0; i < ex.sets; i++) {
+        const btn = document.createElement('button');
+        btn.className = `w-10 h-10 rounded-full font-bold text-sm transition ${i < ex.completed ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-400'}`;
+        btn.innerHTML = i < ex.completed ? '<i class="fa-solid fa-check"></i>' : i + 1;
+        setsContainer.appendChild(btn);
+      }
+
+      const nextBtn = document.getElementById('nextExerciseBtn');
+      if (ex.completed >= ex.sets) {
+        nextBtn.disabled = false;
+        nextBtn.classList.remove('bg-slate-700', 'text-slate-500', 'cursor-not-allowed');
+        nextBtn.classList.add('bg-indigo-500', 'text-white', 'hover:bg-indigo-600');
+      } else {
+        nextBtn.disabled = true;
+        nextBtn.classList.add('bg-slate-700', 'text-slate-500', 'cursor-not-allowed');
+        nextBtn.classList.remove('bg-indigo-500', 'text-white', 'hover:bg-indigo-600');
+      }
+    }
+
+    function completeSet() {
+      const ex = currentWorkout[currentExerciseIndex];
+      if (ex.completed < ex.sets) {
+        ex.completed++;
+        completedSetsCount++;
+        renderExercise();
+        if (ex.completed < ex.sets) {
+          startRest();
+        }
+      }
+    }
+
+    function nextExercise() {
+      currentExerciseIndex++;
+      if (currentExerciseIndex >= currentWorkout.length) {
+        clearInterval(totalTimerInterval);
+        document.getElementById('finalTime').textContent = document.getElementById('totalTimer').textContent;
+        showScreen('finishScreen');
+      } else {
+        renderExercise();
+      }
+    }
+
+    function startRest() {
+      restSeconds = 60;
+      updateRestTimer();
+      showScreen('restScreen');
+      if (restInterval) clearInterval(restInterval);
+      restInterval = setInterval(() => {
+        restSeconds--;
+        updateRestTimer();
+        if (restSeconds <= 0) {
+          clearInterval(restInterval);
+          playBeep();
+          showScreen('workoutScreen');
+        }
+      }, 1000);
+    }
+
+    function updateRestTimer() {
+      const m = String(Math.floor(restSeconds / 60)).padStart(2, '0');
+      const s = String(restSeconds % 60).padStart(2, '0');
+      document.getElementById('restTimer').textContent = `${m}:${s}`;
+    }
+
+    function skipRest() {
+      clearInterval(restInterval);
+      showScreen('workoutScreen');
+    }
+
+    function addRestTime(seconds) {
+      restSeconds += seconds;
+      updateRestTimer();
+    }
+
+    function playBeep() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    }
+
+    // Weekly checklist persistence
+    const checklist = document.getElementById('weeklyChecklist');
+    const savedChecklist = JSON.parse(localStorage.getItem('docaChecklist') || '{}');
+    checklist.querySelectorAll('input').forEach(input => {
+      input.checked = !!savedChecklist[input.dataset.day];
+      input.addEventListener('change', () => {
+        const state = {};
+        checklist.querySelectorAll('input').forEach(cb => state[cb.dataset.day] = cb.checked);
+        localStorage.setItem('docaChecklist', JSON.stringify(state));
+      });
+    });
+  </script>
+</body>
+</html>
