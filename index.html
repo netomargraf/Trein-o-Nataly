@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Treino da Mamãe da Doca 🐶</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        pink: {
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                        },
+                        purple: {
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            touch-action: manipulation;
+        }
+
+        .screen {
+            display: none !important;
+        }
+        
+        .screen.active {
+            display: flex !important;
+        }
+
+        #app {
+            height: 100%;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            background: #0f172a;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ec4899 0%, #9333ea 100%);
+            transition: transform 0.15s, opacity 0.15s;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .workout-card {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .workout-card:active {
+            transform: scale(0.98);
+        }
+
+        .set-checkbox {
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .set-checkbox:checked {
+            background: linear-gradient(135deg, #ec4899 0%, #9333ea 100%);
+            border-color: transparent;
+        }
+        
+        .set-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .day-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #475569;
+            background: #1e293b;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .day-circle.active {
+            background: linear-gradient(135deg, #ec4899 0%, #9333ea 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+
+        .rest-timer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #475569;
+        }
+
+        .rest-timer.active {
+            border-color: #ec4899;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+        }
+
+        /* Workout screen layout - KEY FIX for scrolling */
+        .workout-screen-inner {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workout-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            padding-bottom: 100px; /* space for fixed bottom bar */
+        }
+
+        .workout-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border-top: 1px solid #334155;
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 50;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .exercise-image {
+            width: 100%;
+            max-height: 220px;
+            min-height: 120px;
+            object-fit: contain;
+            border-radius: 16px;
+            background: #1e293b;
+        }
+
+        .exercise-image-fallback {
+            width: 100%;
+            max-height: 220px;
+            min-height: 120px;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 14px;
+            text-align: center;
+            padding: 16px;
+        }
+
+        .exercise-image-fallback .dog-emoji {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ec4899 0%, #9333ea 100%);
+            transition: width 0.3s ease;
+        }
+
+        .timer-display {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .screen-container {
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        }
+
+        .home-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            padding-bottom: 24px;
+        }
+
+        .summary-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        .summary-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border-top: 1px solid #334155;
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 50;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active screen-container">
+            <div class="p-4 bg-slate-900 border-b border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                        Treino da Mamãe da Doca 🐶
+                    </h1>
+                    <div class="text-right">
+                        <div id="session-timer" class="text-lg font-bold timer-display text-pink-400">00:00</div>
+                        <div class="text-xs text-slate-400">sessão</div>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-400">Escolha seu treino e vamos cuidar da mamãe! 💪</p>
+            </div>
+            
+            <div class="home-scroll">
+                <!-- Weekly Checklist -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-3 text-slate-200">Checklist Semanal</h2>
+                    <div class="flex justify-between items-center bg-slate-850 rounded-2xl p-3" id="day-checklist">
+                        <div class="day-circle" data-day="0" title="Domingo">D</div>
+                        <div class="day-circle" data-day="1" title="Segunda">S</div>
+                        <div class="day-circle" data-day="2" title="Terça">T</div>
+                        <div class="day-circle" data-day="3" title="Quarta">Q</div>
+                        <div class="day-circle" data-day="4" title="Quinta">Q</div>
+                        <div class="day-circle" data-day="5" title="Sexta">S</div>
+                        <div class="day-circle" data-day="6" title="Sábado">S</div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 text-center">Toque nos círculos para marcar os dias de treino</p>
+                </div>
+
+                <!-- Workout Cards -->
+                <div class="space-y-4">
+                    <button onclick="app.startWorkout('inferior')" class="workout-card w-full p-5 rounded-2xl text-left">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-3xl">🦵</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-300 px-2 py-1 rounded-full">6 exercícios</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">Treino Inferior</h3>
+                        <p class="text-sm text-slate-400">Pernas e glúteos</p>
+                    </button>
+
+                    <button onclick="app.startWorkout('superior')" class="workout-card w-full p-5 rounded-2xl text-left">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-3xl">💪</span>
+                            <span class="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">6 exercícios</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">Treino Superior</h3>
+                        <p class="text-sm text-slate-400">Costas, peito e braços</p>
+                    </button>
+
+                    <button onclick="app.startWorkout('abdomen')" class="workout-card w-full p-5 rounded-2xl text-left">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-3xl">🔥</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-300 px-2 py-1 rounded-full">2 exercícios</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">Treino Abdômen</h3>
+                        <p class="text-sm text-slate-400">Core e definição</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workout Screen -->
+        <div id="workout-screen" class="screen workout-screen-inner">
+            <!-- Header -->
+            <div class="p-4 bg-slate-900 border-b border-slate-800 shrink-0">
+                <div class="flex items-center justify-between mb-2">
+                    <button onclick="app.goBack()" class="text-slate-400 hover:text-white transition p-2 -ml-2 rounded-lg active:bg-slate-800">
+                        ← Voltar
+                    </button>
+                    <div class="text-right">
+                        <div id="workout-session-timer" class="text-lg font-bold timer-display text-pink-400">00:00</div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="flex justify-between text-xs text-slate-400 mb-1">
+                        <span id="exercise-counter">Exercício 1 de 6</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <h2 id="workout-title" class="text-xl font-bold text-white">Treino Inferior</h2>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="workout-scroll-area">
+                <div id="exercise-container">
+                    <!-- Exercise content injected here -->
+                </div>
+            </div>
+
+            <!-- Fixed Bottom Action Bar -->
+            <div class="workout-action-bar">
+                <div class="flex gap-3">
+                    <button id="prev-btn" onclick="app.prevExercise()" class="flex-1 py-3 px-4 rounded-xl bg-slate-700 text-white font-semibold transition active:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                        Anterior
+                    </button>
+                    <button id="next-btn" onclick="app.nextExercise()" class="flex-1 py-3 px-4 rounded-xl btn-primary text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                        Próximo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Screen -->
+        <div id="summary-screen" class="screen screen-container">
+            <div class="p-4 bg-slate-900 border-b border-slate-800">
+                <h1 class="text-2xl font-bold text-center bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                    Treino Concluído! 🎉
+                </h1>
+            </div>
+            <div class="summary-scroll">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-3">🐶💪</div>
+                    <p class="text-slate-300 mb-2">A mamãe da Doca arrasou!</p>
+                    <div class="inline-block bg-slate-850 rounded-2xl px-6 py-3">
+                        <div class="text-sm text-slate-400">Tempo total</div>
+                        <div id="summary-time" class="text-3xl font-bold timer-display text-pink-400">00:00</div>
+                    </div>
+                </div>
+                <div id="summary-content" class="space-y-3">
+                    <!-- Summary injected here -->
+                </div>
+            </div>
+            <div class="summary-action-bar">
+                <button onclick="app.goHome()" class="w-full py-3 px-4 rounded-xl btn-primary text-white font-semibold">
+                    Voltar ao Início
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const workouts = {
+            inferior: {
+                name: "Treino Inferior",
+                icon: "🦵",
+                exercises: [
+                    { name: "Agachamento Livre ou Guiado", image: "agachamento livre.PNG", reps: "12-15" },
+                    { name: "Afundo ou Passada", image: "Fundo ou Passada.PNG", reps: "12-15" },
+                    { name: "Elevação Pélvica", image: "elevação pélvica.PNG", reps: "15-20" },
+                    { name: "Cadeira Extensora", image: "cadeira extensora.PNG", reps: "12-15" },
+                    { name: "Stiff", image: "rígido.PNG", reps: "12-15" },
+                    { name: "Panturrilha", image: "panturrilha em pe.PNG", reps: "15-20" }
+                ]
+            },
+            superior: {
+                name: "Treino Superior",
+                icon: "💪",
+                exercises: [
+                    { name: "Puxada Alta", image: "puxada alta.PNG", reps: "12-15" },
+                    { name: "Remada Curvada", image: "Remada Curvada.PNG", reps: "12-15" },
+                    { name: "Supino", image: "supino reto.PNG", reps: "12-15" },
+                    { name: "Desenvolvimento", image: "desenvolvimento.PNG", reps: "12-15" },
+                    { name: "Tríceps na Polia", image: "tríceps na polia.PNG", reps: "12-15" },
+                    { name: "Bíceps Rosca Direta", image: "Bíceps Rosca Direta.PNG", reps: "12-15" }
+                ]
+            },
+            abdomen: {
+                name: "Treino Abdômen",
+                icon: "🔥",
+                exercises: [
+                    { name: "Prancha", image: "prancha.PNG", reps: "30-60s", fallback: true },
+                    { name: "Abdominal Supra", image: "supra abdominal.PNG", reps: "15-20" }
+                ]
+            }
+        };
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function beep() {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {
+                console.log('Beep error:', e);
+            }
+        }
+
+        class App {
+            constructor() {
+                this.currentWorkout = null;
+                this.currentExerciseIndex = 0;
+                this.completedSets = {};
+                this.restTimer = null;
+                this.restSeconds = 0;
+                this.sessionSeconds = 0;
+                this.sessionTimer = null;
+                this.activeDays = [];
+                this.loadDays();
+                this.initEventListeners();
+                this.updateDayChecklist();
+                this.startSessionTimer();
+                this.setupHistory();
+            }
+
+            setupHistory() {
+                history.pushState({ screen: 'home' }, '');
+                window.addEventListener('popstate', (e) => {
+                    if (!e.state) return;
+                    if (e.state.screen === 'home') {
+                        this.showScreen('home-screen');
+                    } else if (e.state.screen === 'workout') {
+                        // already in workout, back goes home
+                        this.showScreen('home-screen');
+                    }
+                });
+            }
+
+            initEventListeners() {
+                document.querySelectorAll('.day-circle').forEach(circle => {
+                    circle.addEventListener('click', (e) => {
+                        const day = parseInt(e.target.dataset.day);
+                        this.toggleDay(day);
+                    });
+                });
+            }
+
+            loadDays() {
+                try {
+                    const saved = localStorage.getItem('treinoDocaDays');
+                    this.activeDays = saved ? JSON.parse(saved) : [];
+                } catch (e) {
+                    this.activeDays = [];
+                }
+            }
+
+            saveDays() {
+                localStorage.setItem('treinoDocaDays', JSON.stringify(this.activeDays));
+            }
+
+            toggleDay(day) {
+                const idx = this.activeDays.indexOf(day);
+                if (idx >= 0) {
+                    this.activeDays.splice(idx, 1);
+                } else {
+                    this.activeDays.push(day);
+                }
+                this.saveDays();
+                this.updateDayChecklist();
+            }
+
+            updateDayChecklist() {
+                document.querySelectorAll('.day-circle').forEach(circle => {
+                    const day = parseInt(circle.dataset.day);
+                    if (this.activeDays.includes(day)) {
+                        circle.classList.add('active');
+                    } else {
+                        circle.classList.remove('active');
+                    }
+                });
+            }
+
+            startSessionTimer() {
+                this.sessionTimer = setInterval(() => {
+                    this.sessionSeconds++;
+                    this.updateSessionTimerDisplay();
+                }, 1000);
+            }
+
+            updateSessionTimerDisplay() {
+                const text = this.formatTime(this.sessionSeconds);
+                document.getElementById('session-timer').textContent = text;
+                const wt = document.getElementById('workout-session-timer');
+                if (wt) wt.textContent = text;
+            }
+
+            formatTime(seconds) {
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            startWorkout(type) {
+                this.currentWorkout = workouts[type];
+                this.currentExerciseIndex = 0;
+                this.completedSets = {};
+                this.currentWorkout.exercises.forEach((_, i) => {
+                    this.completedSets[i] = [false, false, false];
+                });
+                this.clearRestTimer();
+                history.pushState({ screen: 'workout' }, '');
+                this.showScreen('workout-screen');
+                this.renderExercise();
+                this.scrollToTop();
+            }
+
+            showScreen(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            }
+
+            goHome() {
+                history.pushState({ screen: 'home' }, '');
+                this.showScreen('home-screen');
+                this.sessionSeconds = 0;
+                this.updateSessionTimerDisplay();
+            }
+
+            goBack() {
+                history.back();
+                this.showScreen('home-screen');
+            }
+
+            renderExercise() {
+                const workout = this.currentWorkout;
+                const index = this.currentExerciseIndex;
+                const exercise = workout.exercises[index];
+                const total = workout.exercises.length;
+                const progress = Math.round(((index) / total) * 100);
+                const sets = this.completedSets[index];
+                const allSetsDone = sets.every(s => s);
+                const imagePath = encodeURI(exercise.image);
+
+                document.getElementById('workout-title').textContent = workout.name;
+                document.getElementById('exercise-counter').textContent = `Exercício ${index + 1} de ${total}`;
+                document.getElementById('progress-percent').textContent = `${progress}%`;
+                document.getElementById('progress-fill').style.width = `${progress}%`;
+
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                prevBtn.disabled = index === 0;
+                nextBtn.textContent = index === total - 1 ? 'Finalizar' : 'Próximo';
+                nextBtn.disabled = !allSetsDone;
+
+                let imageHtml;
+                if (exercise.fallback) {
+                    imageHtml = `
+                        <div class="exercise-image-fallback mb-4">
+                            <div class="dog-emoji">🐶🧘‍♀️</div>
+                            <div class="font-semibold text-white mb-1">Imagem da prancha em descanso!</div>
+                            <div class="text-xs">A Doca guardou essa foto, mas o exercício continua valendo! 💪</div>
+                        </div>
+                    `;
+                } else {
+                    imageHtml = `
+                        <img id="exercise-img" src="${imagePath}" alt="${exercise.name}" class="exercise-image mb-4" onerror="app.handleImageError(this, '${exercise.name.replace(/'/g, "\\'")}")">
+                    `;
+                }
+
+                const setsHtml = [0, 1, 2].map(i => `
+                    <div class="flex items-center justify-between bg-slate-850 rounded-xl p-3 mb-2">
+                        <div>
+                            <div class="font-semibold text-white">Série ${i + 1}</div>
+                            <div class="text-sm text-slate-400">${exercise.reps} repetições</div>
+                        </div>
+                        <input type="checkbox" class="set-checkbox" ${sets[i] ? 'checked' : ''} onchange="app.toggleSet(${i})" aria-label="Série ${i + 1} concluída">
+                    </div>
+                `).join('');
+
+                const restHtml = `
+                    <div id="rest-timer" class="rest-timer rounded-2xl p-4 mb-4 ${this.restSeconds > 0 ? 'active' : ''}">
+                        <div class="text-center">
+                            <div class="text-sm text-slate-400 mb-1">Descanso</div>
+                            <div id="rest-display" class="text-4xl font-bold timer-display text-white mb-3">${this.formatTime(this.restSeconds || 60)}</div>
+                            <div class="flex gap-2 justify-center">
+                                <button onclick="app.startRest()" class="px-4 py-2 rounded-lg bg-pink-500 text-white font-semibold text-sm active:bg-pink-600 transition">
+                                    Iniciar 60s
+                                </button>
+                                <button onclick="app.addRestTime(10)" class="px-4 py-2 rounded-lg bg-slate-700 text-white font-semibold text-sm active:bg-slate-600 transition">
+                                    +10s
+                                </button>
+                                <button onclick="app.skipRest()" class="px-4 py-2 rounded-lg bg-slate-700 text-white font-semibold text-sm active:bg-slate-600 transition">
+                                    Pular
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('exercise-container').innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-bold text-white mb-1">${exercise.name}</h3>
+                        <p class="text-pink-400 font-medium">${exercise.reps} repetições • 3 séries</p>
+                    </div>
+                    ${imageHtml}
+                    ${restHtml}
+                    <div class="mb-4">
+                        <h4 class="text-lg font-semibold text-slate-200 mb-2">Séries</h4>
+                        ${setsHtml}
+                    </div>
+                    <div class="text-sm text-slate-500 text-center py-2">
+                        Complete todas as 3 séries para avançar
+                    </div>
+                `;
+            }
+
+            handleImageError(img, exerciseName) {
+                img.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'exercise-image-fallback mb-4';
+                fallback.innerHTML = `
+                    <div class="dog-emoji">🐶</div>
+                    <div class="font-semibold text-white mb-1">${exerciseName}</div>
+                    <div class="text-xs">A Doca não achou a foto, mas o exercício está aqui!</div>
+                `;
+                img.parentNode.insertBefore(fallback, img);
+            }
+
+            toggleSet(setIndex) {
+                this.completedSets[this.currentExerciseIndex][setIndex] = !this.completedSets[this.currentExerciseIndex][setIndex];
+                this.renderExercise();
+            }
+
+            startRest() {
+                this.clearRestTimer();
+                this.restSeconds = 60;
+                this.updateRestDisplay();
+                document.getElementById('rest-timer').classList.add('active');
+                this.restTimer = setInterval(() => {
+                    this.restSeconds--;
+                    this.updateRestDisplay();
+                    if (this.restSeconds <= 3 && this.restSeconds > 0) {
+                        beep();
+                    }
+                    if (this.restSeconds <= 0) {
+                        this.restSeconds = 0;
+                        this.updateRestDisplay();
+                        beep();
+                        this.clearRestTimer();
+                        document.getElementById('rest-timer').classList.remove('active');
+                    }
+                }, 1000);
+            }
+
+            addRestTime(seconds) {
+                this.restSeconds += seconds;
+                this.updateRestDisplay();
+            }
+
+            skipRest() {
+                this.clearRestTimer();
+                this.restSeconds = 0;
+                this.updateRestDisplay();
+                const rt = document.getElementById('rest-timer');
+                if (rt) rt.classList.remove('active');
+            }
+
+            clearRestTimer() {
+                if (this.restTimer) {
+                    clearInterval(this.restTimer);
+                    this.restTimer = null;
+                }
+            }
+
+            updateRestDisplay() {
+                const display = document.getElementById('rest-display');
+                if (display) display.textContent = this.formatTime(this.restSeconds);
+            }
+
+            nextExercise() {
+                const sets = this.completedSets[this.currentExerciseIndex];
+                if (!sets.every(s => s)) return;
+
+                this.skipRest();
+
+                if (this.currentExerciseIndex < this.currentWorkout.exercises.length - 1) {
+                    this.currentExerciseIndex++;
+                    this.renderExercise();
+                    this.scrollToTop();
+                } else {
+                    this.showSummary();
+                }
+            }
+
+            prevExercise() {
+                if (this.currentExerciseIndex > 0) {
+                    this.skipRest();
+                    this.currentExerciseIndex--;
+                    this.renderExercise();
+                    this.scrollToTop();
+                }
+            }
+
+            scrollToTop() {
+                const scrollArea = document.querySelector('.workout-scroll-area');
+                if (scrollArea) scrollArea.scrollTop = 0;
+            }
+
+            showSummary() {
+                const workout = this.currentWorkout;
+                const totalExercises = workout.exercises.length;
+                const totalSets = totalExercises * 3;
+                let completedSets = 0;
+                Object.values(this.completedSets).forEach(sets => {
+                    completedSets += sets.filter(s => s).length;
+                });
+
+                const summaryContent = workout.exercises.map((ex, i) => {
+                    const done = this.completedSets[i].filter(s => s).length;
+                    return `
+                        <div class="bg-slate-850 rounded-xl p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">${done === 3 ? '✅' : '⏳'}</span>
+                                <div>
+                                    <div class="font-semibold text-white">${ex.name}</div>
+                                    <div class="text-xs text-slate-400">${ex.reps} • ${done}/3 séries</div>
+                                </div>
+                            </div>
+                            <div class="text-sm font-bold ${done === 3 ? 'text-green-400' : 'text-slate-500'}">${done}/3</div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('summary-time').textContent = this.formatTime(this.sessionSeconds);
+                document.getElementById('summary-content').innerHTML = `
+                    <div class="bg-slate-850 rounded-xl p-4 mb-4 text-center">
+                        <div class="text-sm text-slate-400">Séries completadas</div>
+                        <div class="text-2xl font-bold text-white">${completedSets}/${totalSets}</div>
+                    </div>
+                    ${summaryContent}
+                `;
+
+                this.showScreen('summary-screen');
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
